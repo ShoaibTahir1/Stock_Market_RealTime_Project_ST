@@ -1,0 +1,94 @@
+Amazon Linux CLI VS Code:
+
+-- Zookeeper
+
+ssh -i "keypair-kafka-project.pem" ec2-user@ec2-51-20-104-47.eu-north-1.compute.amazonaws.com
+
+sudo yum update
+
+sudo yum install java
+
+java -version
+
+-- Get URL from Webpage: https://downloads.apache.org/kafka/3.8.1/kafka_2.12-3.8.1.tgz
+
+wget https://downloads.apache.org/kafka/3.8.1/kafka_2.12-3.8.1.tgz
+
+ls
+
+tar -xzf kafka_2.12-3.8.1.tgz
+
+ls
+
+sudo mv kafka_2.12-3.8.1 /usr/local/kafka
+
+cd /usr/local/kafka/
+
+sudo nano config/server.properties
+
+-- Scroll Down and Uncomment advertised.listeners=PLAINTEXT://your-host
+-- Modify it to advertised.listeners=PLAINTEXT://<your_ec2_instance_public_IP>:9092
+-- CTRL-S to Save and Then CTRL-X to exit file
+
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+-- Zookeeper starts running
+
+-- Open another bash and Run below commands
+-- Kafka
+
+ssh -i "keypair-kafka-project.pem" ec2-user@ec2-51-20-104-47.eu-north-1.compute.amazonaws.com
+
+export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M"
+
+-- Skip this! It is to check files
+ps aux | grep zookeeper
+
+ps aux | grep kafka
+-----------------------------
+
+cd /usr/local/kafka/
+
+bin/kafka-server-start.sh config/server.properties
+
+-- Open another bash and Run below commands
+-- Producer
+
+ssh -i "keypair-kafka-project.pem" ec2-user@ec2-51-20-104-47.eu-north-1.compute.amazonaws.com
+
+-- Skip this It is to check port and kill the process properly.
+ps aux | grep zookeeper
+
+kill 27011
+
+ps aux | grep kafka
+
+kill 27851
+-------------------------------------------------------------------
+
+cd /usr/local/kafka/
+
+-- bin/kafka-topics.sh --create --topic kafka_project --bootstrap-server {Put the Public IP of your EC2 Instance:9092} --replication-factor 1 --partitions 1
+
+bin/kafka-topics.sh --create --topic kafka_project --bootstrap-server 52.87.185.68:9092 --replication-factor 1 --partitions 1
+
+-- bin/kafka-console-producer.sh --topic kafka_project --bootstrap-server {Put the Public IP of your EC2 Instance:9092}
+
+bin/kafka-console-producer.sh --topic kafka_project --bootstrap-server 52.87.185.68:9092
+
+-- Open another bash and Run below commands
+-- Consumer
+
+ssh -i "keypair-kafka-project.pem" ec2-user@ec2-51-20-104-47.eu-north-1.compute.amazonaws.com
+
+cd /usr/local/kafka/
+
+bin/kafka-console-consumer.sh --topic kafka_project --bootstrap-server 52.87.185.68:9092
+
+-- In Python Terminal
+
+pip install kafka-python
+
+-- Run Producer file
+
+-- Then Run Consumer file
